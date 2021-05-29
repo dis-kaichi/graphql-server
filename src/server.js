@@ -11,6 +11,7 @@ var schema = buildSchema(`
   type Mutation {
     addMessage(message: String!): Message
     updateMessage(id: Int!, message: String!): Message
+    deleteMessage(index: Int!): Message
   },
   type Message {
     id     : Int!
@@ -32,7 +33,8 @@ var getMessage = function({id}) {
 }
 
 var addMessage = function({message}) {
-  var id = messageList.length;
+  var last = messageList[messageList.length - 1];
+  var id = last.id + 1;
   var obj = {id: id, message: message};
   messageList.push(obj);
   fs.writeFileSync(DATABASE, JSON.stringify(messageList));
@@ -49,11 +51,18 @@ var updateMessage = function({id, message}) {
   return messageList.filter(element => element.id == id)[0];
 }
 
+var deleteMessage = function({index}) {
+  var message = messageList.splice(index, 1);
+  fs.writeFileSync(DATABASE, JSON.stringify(messageList));
+  return message[0];
+}
+
 var root = {
   message: getMessage,
   messages: getMessages,
   addMessage: addMessage,
   updateMessage: updateMessage,
+  deleteMessage: deleteMessage,
 }
 
 var app = express();
